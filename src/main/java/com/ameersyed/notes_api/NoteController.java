@@ -1,41 +1,38 @@
 package com.ameersyed.notes_api;
-import org.springframework.web.bind.annotation.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-@RestController@RequestMapping("/notes")
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/notes")
 public class NoteController {
 
-    private final List<Note> notes = new ArrayList<>();
-    private final AtomicLong counter = new AtomicLong();
+    @Autowired
+    private NoteRepository repository;
 
     @GetMapping
     public List<Note> getAllNotes() {
-        return notes;
+        return repository.findAll();
     }
 
     @PostMapping
     public Note createNote(@RequestBody Note note) {
-        note.setId(counter.incrementAndGet());
-        notes.add(note);
-        return note;
+        return repository.save(note);
     }
+
     @PutMapping("/{id}")
     public Note updateNote(@PathVariable Long id, @RequestBody Note updated) {
-        for (Note note : notes ) {
-            if (note.getId().equals(id)) {
-                note.setTitle(updated.getTitle());
-                note.setContent(updated.getContent());
-                return note;
-            }
-        }
-        return null;
+        return repository.findById(id).map(note -> {
+            note.setTitle(updated.getTitle());
+            note.setContent(updated.getContent());
+            return repository.save(note);
+        }).orElse(null);
     }
 
     @DeleteMapping("/{id}")
     public String deleteNote(@PathVariable Long id) {
-        notes.removeIf(note -> note.getId().equals(id));
+        repository.deleteById(id);
         return "Note " + id + " deleted";
     }
 }
