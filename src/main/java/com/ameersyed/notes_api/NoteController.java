@@ -1,6 +1,5 @@
 package com.ameersyed.notes_api;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -8,31 +7,34 @@ import java.util.List;
 @RequestMapping("/notes")
 public class NoteController {
 
-    @Autowired
-    private NoteRepository repository;
+    private final NoteService noteService;
+
+    public NoteController(NoteService noteService) {
+        this.noteService = noteService;
+    }
 
     @GetMapping
     public List<Note> getAllNotes() {
-        return repository.findAll();
+        return noteService.getAllNotes();
     }
 
     @PostMapping
     public Note createNote(@RequestBody Note note) {
-        return repository.save(note);
+        return noteService.createNote(note);
+    }
+
+    @GetMapping("/{id}")
+    public Note getNoteById(@PathVariable Long id) {
+        return noteService.getNoteById(id).orElseThrow();
     }
 
     @PutMapping("/{id}")
-    public Note updateNote(@PathVariable Long id, @RequestBody Note updated) {
-        return repository.findById(id).map(note -> {
-            note.setTitle(updated.getTitle());
-            note.setContent(updated.getContent());
-            return repository.save(note);
-        }).orElse(null);
+    public Note updateNote(@PathVariable Long id, @RequestBody Note note) {
+        return noteService.updateNote(id, note);
     }
 
     @DeleteMapping("/{id}")
-    public String deleteNote(@PathVariable Long id) {
-        repository.deleteById(id);
-        return "Note " + id + " deleted";
+    public void deleteNote(@PathVariable Long id) {
+        noteService.deleteNote(id);
     }
 }
